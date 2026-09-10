@@ -13,12 +13,13 @@
 
 <!-- LOGIN -->
 <div class="login-screen" id="loginScreen">
-  <form class="login-card" id="loginForm">
+  <form class="login-card" id="loginForm" onsubmit="return false" method="dialog">
     <span class="brand-word">LAUNCH<span class="brand-sub">UF</span></span>
     <p class="login-sub">Admin — endast för Riman &amp; William</p>
     <label><span>E-post</span><input type="email" name="email" required autocomplete="username"></label>
     <label><span>Lösenord</span><input type="password" name="password" required autocomplete="current-password"></label>
     <p class="login-error" id="loginError" hidden></p>
+    <p class="login-error" id="loadError" hidden>Sidan kunde inte ladda klart (nätverk/CDN). Ladda om sidan, eller kolla F12 → Console.</p>
     <button class="button button-primary" type="submit">Logga in</button>
   </form>
 </div>
