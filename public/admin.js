@@ -8,7 +8,15 @@ const loadError = document.getElementById('loadError');
 const loginBtn = document.getElementById('loginBtn');
 const userEmail = document.getElementById('userEmail');
 
-let supabaseClient;
+let supabaseClient = null;
+
+let allOrders = [];
+let activeFilter = 'all';
+
+
+/* =========================================================
+   STATUS LABELS
+========================================================= */
 
 const STATUS_LABELS = {
   new: 'Ny',
@@ -19,6 +27,7 @@ const STATUS_LABELS = {
   cancelled: 'Avbruten'
 };
 
+
 const PAYMENT_LABELS = {
   unpaid: 'Obetald',
   pending: 'Väntar',
@@ -27,267 +36,630 @@ const PAYMENT_LABELS = {
   refunded: 'Återbetald'
 };
 
-let allOrders = [];
-let activeFilter = 'all';
 
 /* =========================================================
    SUPABASE INIT
-   ========================================================= */
+========================================================= */
 
 function initSupabase() {
+
   try {
+
     if (!window.supabase) {
-      throw new Error('Supabase-biblioteket kunde inte laddas.');
+      throw new Error(
+        'Supabase-biblioteket laddades inte.'
+      );
     }
 
-    if (!cfg.supabaseUrl || cfg.supabaseUrl.includes('YOUR_')) {
-      throw new Error('supabaseUrl saknas i config.js.');
+    if (
+      !cfg.supabaseUrl ||
+      cfg.supabaseUrl.includes('YOUR_')
+    ) {
+      throw new Error(
+        'supabaseUrl saknas i config.js.'
+      );
     }
 
-    if (!cfg.supabaseAnonKey || cfg.supabaseAnonKey.includes('YOUR_')) {
-      throw new Error('supabaseAnonKey saknas i config.js.');
+    if (
+      !cfg.supabaseAnonKey ||
+      cfg.supabaseAnonKey.includes('YOUR_')
+    ) {
+      throw new Error(
+        'supabaseAnonKey saknas i config.js.'
+      );
     }
 
-    supabaseClient = window.supabase.createClient(
-      cfg.supabaseUrl,
-      cfg.supabaseAnonKey
+
+    supabaseClient =
+      window.supabase.createClient(
+        cfg.supabaseUrl,
+        cfg.supabaseAnonKey
+      );
+
+
+    console.log(
+      'Supabase initialized successfully'
     );
 
-    return true;
-  } catch (err) {
-    console.error('LAUNCH admin init error:', err);
 
-    loadError.textContent = `Sidan kunde inte starta: ${err.message}`;
+    return true;
+
+  } catch (error) {
+
+    console.error(
+      'LAUNCH admin init error:',
+      error
+    );
+
+
+    loadError.textContent =
+      `Sidan kunde inte starta: ${error.message}`;
+
+
     loadError.hidden = false;
 
-    if (loginBtn) {
-      loginBtn.disabled = true;
-    }
+
+    loginBtn.disabled = true;
+
 
     return false;
   }
 }
 
+
 /* =========================================================
-   UI
-   ========================================================= */
+   LOGIN / APP SCREEN
+========================================================= */
 
 function showLogin() {
+
+  console.log(
+    'Showing login screen'
+  );
+
+
+  /*
+   * IMPORTANT:
+   * admin.css sets .login-screen { display:flex }
+   * which can override [hidden].
+   *
+   * Therefore we explicitly control display here.
+   */
+
   loginScreen.hidden = false;
+  loginScreen.style.display = 'flex';
+
+
   adminApp.hidden = true;
+  adminApp.style.display = 'none';
 }
 
+
 function showApp(session) {
-  if (!session || !session.user) {
+
+  console.log(
+    'Showing admin app',
+    session
+  );
+
+
+  if (
+    !session ||
+    !session.user
+  ) {
+
+    console.error(
+      'showApp called without valid session'
+    );
+
     showLogin();
+
     return;
   }
 
-  loginScreen.hidden = true;
-  adminApp.hidden = false;
 
-  userEmail.textContent = session.user.email || '';
+  /*
+   * Explicitly hide login screen.
+   */
+
+  loginScreen.hidden = true;
+  loginScreen.style.display = 'none';
+
+
+  /*
+   * Explicitly show admin app.
+   */
+
+  adminApp.hidden = false;
+  adminApp.style.display = 'block';
+
+
+  /*
+   * Show logged in user.
+   */
+
+  userEmail.textContent =
+    session.user.email || '';
+
+
+  console.log(
+    'Login screen hidden:',
+    loginScreen.hidden
+  );
+
+  console.log(
+    'Login screen display:',
+    loginScreen.style.display
+  );
+
+  console.log(
+    'Admin app hidden:',
+    adminApp.hidden
+  );
+
+  console.log(
+    'Admin app display:',
+    adminApp.style.display
+  );
+
+
+  /*
+   * Load orders after successful login.
+   */
 
   loadOrders();
 }
 
+
 /* =========================================================
-   AUTH
-   ========================================================= */
+   CHECK EXISTING SESSION
+========================================================= */
 
 async function checkSession() {
+
   try {
-    const { data, error } = await supabaseClient.auth.getSession();
+
+    console.log(
+      'Checking existing Supabase session...'
+    );
+
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.auth.getSession();
+
 
     if (error) {
-      console.error('getSession error:', error);
+
+      console.error(
+        'getSession error:',
+        error
+      );
+
       showLogin();
+
       return;
     }
 
-    const session = data?.session || null;
+
+    const session =
+      data?.session || null;
+
 
     if (session) {
+
+      console.log(
+        'Existing session found'
+      );
+
       showApp(session);
+
     } else {
+
+      console.log(
+        'No existing session'
+      );
+
       showLogin();
     }
-  } catch (err) {
-    console.error('checkSession error:', err);
+
+
+  } catch (error) {
+
+    console.error(
+      'checkSession error:',
+      error
+    );
+
     showLogin();
   }
 }
 
-loginForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
 
-  loginError.hidden = true;
-  loginError.textContent = '';
+/* =========================================================
+   LOGIN
+========================================================= */
 
-  const email = loginForm.elements.email.value.trim();
-  const password = loginForm.elements.password.value;
+loginForm.addEventListener(
+  'submit',
+  async function(event) {
 
-  if (!email || !password) {
-    loginError.textContent = 'Fyll i e-post och lösenord.';
-    loginError.hidden = false;
+    event.preventDefault();
+
+
+    console.log(
+      'LOGIN BUTTON PRESSED'
+    );
+
+
+    loginError.hidden = true;
+    loginError.textContent = '';
+
+
+    const email =
+      loginForm.elements.email.value.trim();
+
+
+    const password =
+      loginForm.elements.password.value;
+
+
+    if (!email) {
+
+      loginError.textContent =
+        'Fyll i e-post.';
+
+      loginError.hidden = false;
+
+      return;
+    }
+
+
+    if (!password) {
+
+      loginError.textContent =
+        'Fyll i lösenord.';
+
+      loginError.hidden = false;
+
+      return;
+    }
+
+
+    loginBtn.disabled = true;
+
+    loginBtn.textContent =
+      'Loggar in…';
+
+
+    try {
+
+      console.log(
+        'Calling Supabase signInWithPassword...'
+      );
+
+
+      const {
+        data,
+        error
+      } =
+        await supabaseClient.auth
+          .signInWithPassword({
+            email,
+            password
+          });
+
+
+      console.log(
+        'Supabase login response:',
+        {
+          error:
+            error?.message || null,
+
+          hasSession:
+            !!data?.session,
+
+          hasUser:
+            !!data?.user
+        }
+      );
+
+
+      /*
+       * Supabase returned an error.
+       */
+
+      if (error) {
+
+        console.error(
+          'Supabase login error:',
+          error
+        );
+
+
+        loginError.textContent =
+          getLoginErrorMessage(error);
+
+
+        loginError.hidden = false;
+
+
+        return;
+      }
+
+
+      /*
+       * Supabase says login succeeded,
+       * but make absolutely sure we have
+       * a session and user.
+       */
+
+      if (
+        !data ||
+        !data.session ||
+        !data.user
+      ) {
+
+        console.error(
+          'Login returned no valid session:',
+          data
+        );
+
+
+        loginError.textContent =
+          'Inloggningen lyckades inte skapa en aktiv session.';
+
+
+        loginError.hidden = false;
+
+
+        return;
+      }
+
+
+      console.log(
+        'AUTH SUCCESS — SWITCHING TO ADMIN'
+      );
+
+
+      /*
+       * THIS IS THE IMPORTANT PART.
+       *
+       * The login screen is explicitly
+       * hidden with display:none.
+       */
+
+      showApp(
+        data.session
+      );
+
+
+    } catch (error) {
+
+      console.error(
+        'Unexpected login error:',
+        error
+      );
+
+
+      loginError.textContent =
+        'Något gick fel vid inloggningen. Försök igen.';
+
+
+      loginError.hidden = false;
+
+
+    } finally {
+
+      loginBtn.disabled = false;
+
+      loginBtn.textContent =
+        'Logga in';
+    }
+
+  }
+);
+
+
+/* =========================================================
+   AUTH STATE
+========================================================= */
+
+function setupAuthListener() {
+
+  if (!supabaseClient) {
     return;
   }
 
-  loginBtn.disabled = true;
-  loginBtn.textContent = 'Loggar in…';
 
-  try {
-    const { data, error } =
-      await supabaseClient.auth.signInWithPassword({
-        email,
-        password
-      });
+  supabaseClient.auth.onAuthStateChange(
+    function(event, session) {
 
-    console.log('Supabase login response:', {
-      hasUser: !!data?.user,
-      hasSession: !!data?.session,
-      error: error?.message || null
-    });
+      console.log(
+        'Auth event:',
+        event
+      );
 
-    if (error) {
-      console.error('Login error:', error);
 
-      loginError.textContent = getLoginErrorMessage(error);
-      loginError.hidden = false;
+      if (
+        event === 'SIGNED_IN' &&
+        session
+      ) {
 
-      return;
+        showApp(session);
+
+        return;
+      }
+
+
+      if (
+        event === 'SIGNED_OUT'
+      ) {
+
+        showLogin();
+
+        return;
+      }
+
     }
+  );
+}
 
-    /*
-     * IMPORTANT:
-     * Supabase should return both user and session after a
-     * successful password login.
-     */
-    if (!data?.user || !data?.session) {
-      loginError.textContent =
-        'Inloggningen lyckades inte skapa en session. Försök igen.';
-      loginError.hidden = false;
-
-      console.error('Login succeeded without session:', data);
-
-      return;
-    }
-
-    /*
-     * Explicitly verify the session before changing the screen.
-     * This prevents the UI from getting stuck on the login page.
-     */
-    const {
-      data: sessionData,
-      error: sessionError
-    } = await supabaseClient.auth.getSession();
-
-    if (sessionError) {
-      console.error('Session verification error:', sessionError);
-
-      loginError.textContent =
-        'Inloggningen lyckades, men sessionen kunde inte verifieras.';
-      loginError.hidden = false;
-
-      return;
-    }
-
-    if (!sessionData?.session) {
-      loginError.textContent =
-        'Inloggningen lyckades, men ingen aktiv session hittades.';
-      loginError.hidden = false;
-
-      return;
-    }
-
-    showApp(sessionData.session);
-
-  } catch (err) {
-    console.error('Unexpected login error:', err);
-
-    loginError.textContent =
-      'Något gick fel vid inloggningen. Kontrollera internetanslutningen och försök igen.';
-    loginError.hidden = false;
-  } finally {
-    loginBtn.disabled = false;
-    loginBtn.textContent = 'Logga in';
-  }
-});
-
-supabaseClient?.auth?.onAuthStateChange?.((event, session) => {
-  console.log('Auth state changed:', event);
-
-  if (event === 'SIGNED_IN' && session) {
-    showApp(session);
-  }
-
-  if (event === 'SIGNED_OUT') {
-    showLogin();
-  }
-});
-
-document.getElementById('logoutBtn').addEventListener('click', async () => {
-  try {
-    await supabaseClient.auth.signOut();
-  } catch (err) {
-    console.error('Logout error:', err);
-  }
-
-  showLogin();
-});
 
 /* =========================================================
-   ERROR MESSAGES
-   ========================================================= */
+   LOGOUT
+========================================================= */
+
+document
+  .getElementById('logoutBtn')
+  .addEventListener(
+    'click',
+    async function() {
+
+      try {
+
+        console.log(
+          'Logging out...'
+        );
+
+
+        const {
+          error
+        } =
+          await supabaseClient.auth.signOut();
+
+
+        if (error) {
+
+          console.error(
+            'Logout error:',
+            error
+          );
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          'Unexpected logout error:',
+          error
+        );
+
+      } finally {
+
+        showLogin();
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   LOGIN ERROR TEXT
+========================================================= */
 
 function getLoginErrorMessage(error) {
-  const message = String(error?.message || '').toLowerCase();
 
-  if (message.includes('invalid login credentials')) {
+  const message =
+    String(
+      error?.message || ''
+    ).toLowerCase();
+
+
+  if (
+    message.includes(
+      'invalid login credentials'
+    )
+  ) {
+
     return 'Fel e-post eller lösenord.';
   }
 
-  if (message.includes('email not confirmed')) {
+
+  if (
+    message.includes(
+      'email not confirmed'
+    )
+  ) {
+
     return 'E-postadressen är inte bekräftad ännu.';
   }
 
-  if (message.includes('too many requests')) {
+
+  if (
+    message.includes(
+      'too many requests'
+    )
+  ) {
+
     return 'För många försök. Vänta en stund och försök igen.';
   }
 
-  return error?.message || 'Kunde inte logga in.';
+
+  return (
+    error?.message ||
+    'Kunde inte logga in.'
+  );
 }
 
+
 /* =========================================================
-   DATA
-   ========================================================= */
+   LOAD ORDERS
+========================================================= */
 
 async function loadOrders() {
-  const tbody = document.getElementById('ordersBody');
+
+  const tbody =
+    document.getElementById(
+      'ordersBody'
+    );
+
 
   tbody.innerHTML = `
     <tr>
-      <td colspan="7" class="empty-row">
+      <td
+        colspan="7"
+        class="empty-row"
+      >
         Laddar beställningar…
       </td>
     </tr>
   `;
 
+
   try {
+
     const {
       data,
       error
-    } = await supabaseClient
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false });
+    } =
+      await supabaseClient
+        .from('orders')
+        .select('*')
+        .order(
+          'created_at',
+          {
+            ascending: false
+          }
+        );
+
 
     if (error) {
-      console.error('Orders error:', error);
+
+      console.error(
+        'Orders error:',
+        error
+      );
+
 
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" class="empty-row">
+          <td
+            colspan="7"
+            class="empty-row"
+          >
             Kunde inte hämta beställningar:
             ${escapeHtml(error.message)}
           </td>
@@ -297,17 +669,32 @@ async function loadOrders() {
       return;
     }
 
-    allOrders = data || [];
+
+    allOrders =
+      Array.isArray(data)
+        ? data
+        : [];
+
 
     renderStats();
+
     renderTable();
 
-  } catch (err) {
-    console.error('loadOrders error:', err);
+
+  } catch (error) {
+
+    console.error(
+      'loadOrders error:',
+      error
+    );
+
 
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="empty-row">
+        <td
+          colspan="7"
+          class="empty-row"
+        >
           Kunde inte hämta beställningar.
         </td>
       </tr>
@@ -315,76 +702,159 @@ async function loadOrders() {
   }
 }
 
+
+/* =========================================================
+   STATS
+========================================================= */
+
 function renderStats() {
-  const total = allOrders.length;
 
-  const paid = allOrders.filter(
-    o => o.payment_status === 'paid'
-  ).length;
+  const total =
+    allOrders.length;
 
-  const revenue = allOrders
-    .filter(o => o.payment_status === 'paid')
-    .reduce((sum, o) => sum + (Number(o.amount_kr) || 0), 0);
 
-  const active = allOrders.filter(
-    o => !['completed', 'cancelled'].includes(o.status)
-  ).length;
+  const paid =
+    allOrders.filter(
+      order =>
+        order.payment_status === 'paid'
+    ).length;
 
-  const grow = allOrders.filter(
-    o => o.package === 'GROW'
-  ).length;
 
-  document.getElementById('adminStats').innerHTML = [
-    ['Totalt', total],
-    ['Betalda', paid],
-    ['Intäkt', `${revenue} kr`],
-    ['Aktiva', active],
-    ['GROW / SCALE', `${grow} / ${total - grow}`]
-  ]
-    .map(
-      ([label, value]) => `
-        <div class="mini-stat">
-          <span class="num">${escapeHtml(value)}</span>
-          <span class="lbl">${escapeHtml(label)}</span>
-        </div>
-      `
-    )
-    .join('');
+  const revenue =
+    allOrders
+      .filter(
+        order =>
+          order.payment_status === 'paid'
+      )
+      .reduce(
+        (sum, order) =>
+          sum +
+          (Number(order.amount_kr) || 0),
+        0
+      );
+
+
+  const active =
+    allOrders.filter(
+      order =>
+        ![
+          'completed',
+          'cancelled'
+        ].includes(order.status)
+    ).length;
+
+
+  const grow =
+    allOrders.filter(
+      order =>
+        order.package === 'GROW'
+    ).length;
+
+
+  const scale =
+    allOrders.filter(
+      order =>
+        order.package === 'SCALE'
+    ).length;
+
+
+  document
+    .getElementById('adminStats')
+    .innerHTML = [
+
+      ['Totalt', total],
+
+      ['Betalda', paid],
+
+      ['Intäkt', `${revenue} kr`],
+
+      ['Aktiva', active],
+
+      [
+        'GROW / SCALE',
+        `${grow} / ${scale}`
+      ]
+
+    ]
+      .map(
+        function([label, value]) {
+
+          return `
+            <div class="mini-stat">
+              <span class="num">
+                ${escapeHtml(value)}
+              </span>
+
+              <span class="lbl">
+                ${escapeHtml(label)}
+              </span>
+            </div>
+          `;
+        }
+      )
+      .join('');
 }
 
+
+/* =========================================================
+   TABLE
+========================================================= */
+
 function renderTable() {
+
   const search =
-    document.getElementById('searchInput').value.trim().toLowerCase();
+    document
+      .getElementById('searchInput')
+      .value
+      .trim()
+      .toLowerCase();
 
-  const rows = allOrders.filter(o => {
-    if (
-      activeFilter !== 'all' &&
-      o.status !== activeFilter
-    ) {
-      return false;
-    }
 
-    if (!search) {
-      return true;
-    }
+  const rows =
+    allOrders.filter(
+      function(order) {
 
-    return [
-      o.order_number,
-      o.company_name,
-      o.email,
-      o.contact_name
-    ]
-      .join(' ')
-      .toLowerCase()
-      .includes(search);
-  });
+        if (
+          activeFilter !== 'all' &&
+          order.status !== activeFilter
+        ) {
 
-  const tbody = document.getElementById('ordersBody');
+          return false;
+        }
+
+
+        if (!search) {
+          return true;
+        }
+
+
+        return [
+          order.order_number,
+          order.company_name,
+          order.email,
+          order.contact_name
+        ]
+          .join(' ')
+          .toLowerCase()
+          .includes(search);
+      }
+    );
+
+
+  const tbody =
+    document.getElementById(
+      'ordersBody'
+    );
+
 
   if (!rows.length) {
+
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="empty-row">
+        <td
+          colspan="7"
+          class="empty-row"
+        >
           Inga beställningar matchar.
         </td>
       </tr>
@@ -393,311 +863,622 @@ function renderTable() {
     return;
   }
 
-  tbody.innerHTML = rows
-    .map(
-      o => `
-        <tr data-id="${escapeHtml(o.id)}">
-          <td class="order-num">
-            ${escapeHtml(o.order_number)}
-          </td>
 
-          <td>
-            ${escapeHtml(o.company_name)}
-          </td>
+  tbody.innerHTML =
+    rows
+      .map(
+        function(order) {
 
-          <td>
-            ${escapeHtml(o.package)}
-          </td>
+          return `
+            <tr
+              data-id="${escapeHtml(order.id)}"
+            >
 
-          <td>
-            ${badge(o.payment_status, PAYMENT_LABELS)}
-          </td>
+              <td class="order-num">
+                ${escapeHtml(
+                  order.order_number
+                )}
+              </td>
 
-          <td>
-            ${badge(o.status, STATUS_LABELS)}
-          </td>
+              <td>
+                ${escapeHtml(
+                  order.company_name
+                )}
+              </td>
 
-          <td>
-            ${formatDate(o.created_at)}
-          </td>
+              <td>
+                ${escapeHtml(
+                  order.package
+                )}
+              </td>
 
-          <td>→</td>
-        </tr>
-      `
-    )
-    .join('');
+              <td>
+                ${badge(
+                  order.payment_status,
+                  PAYMENT_LABELS
+                )}
+              </td>
+
+              <td>
+                ${badge(
+                  order.status,
+                  STATUS_LABELS
+                )}
+              </td>
+
+              <td>
+                ${formatDate(
+                  order.created_at
+                )}
+              </td>
+
+              <td>
+                →
+              </td>
+
+            </tr>
+          `;
+        }
+      )
+      .join('');
+
 
   tbody
-    .querySelectorAll('tr[data-id]')
-    .forEach(tr => {
-      tr.addEventListener('click', () => {
-        openDrawer(tr.dataset.id);
-      });
-    });
+    .querySelectorAll(
+      'tr[data-id]'
+    )
+    .forEach(
+      function(row) {
+
+        row.addEventListener(
+          'click',
+          function() {
+
+            openDrawer(
+              row.dataset.id
+            );
+
+          }
+        );
+
+      }
+    );
 }
 
-function badge(value, labels) {
+
+/* =========================================================
+   BADGE
+========================================================= */
+
+function badge(
+  value,
+  labels
+) {
+
+  const safeValue =
+    String(value || '');
+
+
   return `
-    <span class="badge badge-${escapeHtml(value)}">
+    <span
+      class="badge badge-${escapeHtml(
+        safeValue
+      )}"
+    >
+
       <span class="badge-dot"></span>
-      ${escapeHtml(labels[value] || value)}
+
+      ${escapeHtml(
+        labels[safeValue] ||
+        safeValue
+      )}
+
     </span>
   `;
 }
 
+
+/* =========================================================
+   DATE
+========================================================= */
+
 function formatDate(iso) {
-  if (!iso) return '—';
 
-  const date = new Date(iso);
-
-  if (Number.isNaN(date.getTime())) {
+  if (!iso) {
     return '—';
   }
 
-  return date.toLocaleDateString('sv-SE', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  });
-}
 
-function escapeHtml(value = '') {
-  return String(value).replace(
-    /[&<>"']/g,
-    char =>
-      ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-      })[char]
+  const date =
+    new Date(iso);
+
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+
+    return '—';
+  }
+
+
+  return date.toLocaleDateString(
+    'sv-SE',
+    {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    }
   );
 }
 
+
 /* =========================================================
-   FILTERS / SEARCH
-   ========================================================= */
+   ESCAPE HTML
+========================================================= */
+
+function escapeHtml(value = '') {
+
+  return String(value)
+    .replace(
+      /[&<>"']/g,
+      function(character) {
+
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[character];
+
+      }
+    );
+}
+
+
+/* =========================================================
+   FILTER / SEARCH
+========================================================= */
 
 document
   .getElementById('refreshBtn')
-  .addEventListener('click', loadOrders);
+  .addEventListener(
+    'click',
+    loadOrders
+  );
+
 
 document
   .getElementById('searchInput')
-  .addEventListener('input', renderTable);
+  .addEventListener(
+    'input',
+    renderTable
+  );
+
 
 document
   .getElementById('filterTabs')
-  .addEventListener('click', event => {
-    const button = event.target.closest('.filter-tab');
+  .addEventListener(
+    'click',
+    function(event) {
 
-    if (!button) {
-      return;
+      const button =
+        event.target.closest(
+          '.filter-tab'
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      document
+        .querySelectorAll(
+          '.filter-tab'
+        )
+        .forEach(
+          function(tab) {
+
+            tab.classList.remove(
+              'active'
+            );
+
+          }
+        );
+
+
+      button.classList.add(
+        'active'
+      );
+
+
+      activeFilter =
+        button.dataset.status;
+
+
+      renderTable();
     }
+  );
 
-    document
-      .querySelectorAll('.filter-tab')
-      .forEach(b => b.classList.remove('active'));
-
-    button.classList.add('active');
-
-    activeFilter = button.dataset.status;
-
-    renderTable();
-  });
 
 /* =========================================================
    DRAWER
-   ========================================================= */
+========================================================= */
 
-const drawerOverlay = document.getElementById('drawerOverlay');
-const drawerContent = document.getElementById('drawerContent');
+const drawerOverlay =
+  document.getElementById(
+    'drawerOverlay'
+  );
+
+
+const drawerContent =
+  document.getElementById(
+    'drawerContent'
+  );
+
 
 function openDrawer(id) {
-  const order = allOrders.find(item => String(item.id) === String(id));
+
+  const order =
+    allOrders.find(
+      function(item) {
+
+        return String(item.id) ===
+          String(id);
+
+      }
+    );
+
 
   if (!order) {
     return;
   }
 
+
   drawerContent.innerHTML = `
+
     <h2>
-      ${escapeHtml(order.company_name)}
+      ${escapeHtml(
+        order.company_name
+      )}
     </h2>
 
+
     <p class="order-meta">
-      ${escapeHtml(order.order_number)}
+      ${escapeHtml(
+        order.order_number
+      )}
       ·
-      ${formatDate(order.created_at)}
+      ${formatDate(
+        order.created_at
+      )}
     </p>
 
+
     <div class="badges-row">
-      ${badge(order.status, STATUS_LABELS)}
-      ${badge(order.payment_status, PAYMENT_LABELS)}
+
+      ${badge(
+        order.status,
+        STATUS_LABELS
+      )}
+
+      ${badge(
+        order.payment_status,
+        PAYMENT_LABELS
+      )}
 
       <span class="badge">
-        ${escapeHtml(order.package)}
+
+        ${escapeHtml(
+          order.package
+        )}
+
         ${
           order.amount_kr
-            ? ` · ${escapeHtml(order.amount_kr)} kr`
+            ? ` · ${escapeHtml(
+                order.amount_kr
+              )} kr`
             : ''
         }
+
       </span>
+
     </div>
+
 
     ${
       order.logo_url
         ? `
           <img
             class="logo-preview"
-            src="${escapeHtml(order.logo_url)}"
-            alt="Logga för ${escapeHtml(order.company_name)}"
+            src="${escapeHtml(
+              order.logo_url
+            )}"
+            alt="Logga för ${escapeHtml(
+              order.company_name
+            )}"
           >
         `
         : ''
     }
 
+
     <div class="detail-grid">
+
       <div>
         <span>Kontaktperson</span>
-        <strong>${escapeHtml(order.contact_name)}</strong>
+        <strong>
+          ${escapeHtml(
+            order.contact_name
+          )}
+        </strong>
       </div>
+
 
       <div>
         <span>E-post</span>
-        <strong>${escapeHtml(order.email)}</strong>
+        <strong>
+          ${escapeHtml(
+            order.email
+          )}
+        </strong>
       </div>
+
 
       <div>
         <span>Telefon</span>
-        <strong>${escapeHtml(order.phone || '—')}</strong>
+        <strong>
+          ${escapeHtml(
+            order.phone || '—'
+          )}
+        </strong>
       </div>
+
 
       <div>
         <span>Instagram</span>
-        <strong>${escapeHtml(order.instagram || '—')}</strong>
+        <strong>
+          ${escapeHtml(
+            order.instagram || '—'
+          )}
+        </strong>
       </div>
+
 
       <div>
         <span>TikTok</span>
-        <strong>${escapeHtml(order.tiktok || '—')}</strong>
+        <strong>
+          ${escapeHtml(
+            order.tiktok || '—'
+          )}
+        </strong>
       </div>
+
 
       <div>
         <span>Stil</span>
-        <strong>${escapeHtml(order.style || '—')}</strong>
+        <strong>
+          ${escapeHtml(
+            order.style || '—'
+          )}
+        </strong>
       </div>
+
 
       <div>
         <span>Färger</span>
-        <strong>${escapeHtml(order.colors || '—')}</strong>
+        <strong>
+          ${escapeHtml(
+            order.colors || '—'
+          )}
+        </strong>
       </div>
+
 
       <div>
         <span>Lanseringsdatum</span>
-        <strong>${escapeHtml(order.launch_date || '—')}</strong>
+        <strong>
+          ${escapeHtml(
+            order.launch_date || '—'
+          )}
+        </strong>
       </div>
+
     </div>
 
+
     <div class="detail-block">
-      <h4>Vad de säljer</h4>
+
+      <h4>
+        Vad de säljer
+      </h4>
+
       <p>
-        ${escapeHtml(order.business_description || '—')}
+        ${escapeHtml(
+          order.business_description || '—'
+        )}
       </p>
+
     </div>
+
 
     ${
       order.website_feel
         ? `
           <div class="detail-block">
-            <h4>Önskad känsla</h4>
-            <p>${escapeHtml(order.website_feel)}</p>
+
+            <h4>
+              Önskad känsla
+            </h4>
+
+            <p>
+              ${escapeHtml(
+                order.website_feel
+              )}
+            </p>
+
           </div>
         `
         : ''
     }
+
 
     ${
       order.pages
         ? `
           <div class="detail-block">
-            <h4>Önskade sidor</h4>
-            <p>${escapeHtml(order.pages)}</p>
+
+            <h4>
+              Önskade sidor
+            </h4>
+
+            <p>
+              ${escapeHtml(
+                order.pages
+              )}
+            </p>
+
           </div>
         `
         : ''
     }
+
 
     ${
       order.references
         ? `
           <div class="detail-block">
-            <h4>Referenser</h4>
-            <p>${escapeHtml(order.references)}</p>
+
+            <h4>
+              Referenser
+            </h4>
+
+            <p>
+              ${escapeHtml(
+                order.references
+              )}
+            </p>
+
           </div>
         `
         : ''
     }
+
 
     ${
       order.extra_information
         ? `
           <div class="detail-block">
-            <h4>Övrig information</h4>
-            <p>${escapeHtml(order.extra_information)}</p>
+
+            <h4>
+              Övrig information
+            </h4>
+
+            <p>
+              ${escapeHtml(
+                order.extra_information
+              )}
+            </p>
+
           </div>
         `
         : ''
     }
 
+
     <div class="status-select-row">
-      <label>Orderstatus</label>
+
+      <label>
+        Orderstatus
+      </label>
 
       <select id="statusSelect">
-        ${Object.entries(STATUS_LABELS)
+
+        ${Object.entries(
+          STATUS_LABELS
+        )
           .map(
-            ([value, label]) => `
-              <option
-                value="${escapeHtml(value)}"
-                ${
-                  order.status === value
-                    ? 'selected'
-                    : ''
-                }
-              >
-                ${escapeHtml(label)}
-              </option>
-            `
+            function([
+              value,
+              label
+            ]) {
+
+              return `
+                <option
+                  value="${escapeHtml(
+                    value
+                  )}"
+                  ${
+                    order.status ===
+                    value
+                      ? 'selected'
+                      : ''
+                  }
+                >
+                  ${escapeHtml(
+                    label
+                  )}
+                </option>
+              `;
+
+            }
           )
           .join('')}
+
       </select>
+
     </div>
+
 
     <div class="status-select-row">
-      <label>Betalstatus</label>
+
+      <label>
+        Betalstatus
+      </label>
 
       <select id="paymentSelect">
-        ${Object.entries(PAYMENT_LABELS)
+
+        ${Object.entries(
+          PAYMENT_LABELS
+        )
           .map(
-            ([value, label]) => `
-              <option
-                value="${escapeHtml(value)}"
-                ${
-                  order.payment_status === value
-                    ? 'selected'
-                    : ''
-                }
-              >
-                ${escapeHtml(label)}
-              </option>
-            `
+            function([
+              value,
+              label
+            ]) {
+
+              return `
+                <option
+                  value="${escapeHtml(
+                    value
+                  )}"
+                  ${
+                    order.payment_status ===
+                    value
+                      ? 'selected'
+                      : ''
+                  }
+                >
+                  ${escapeHtml(
+                    label
+                  )}
+                </option>
+              `;
+
+            }
           )
           .join('')}
+
       </select>
+
     </div>
 
+
     <div class="drawer-actions">
+
       <button
         class="button button-primary"
         id="saveOrderBtn"
@@ -706,12 +1487,15 @@ function openDrawer(id) {
         Spara ändringar
       </button>
 
+
       ${
         order.logo_url
           ? `
             <a
               class="button button-ghost"
-              href="${escapeHtml(order.logo_url)}"
+              href="${escapeHtml(
+                order.logo_url
+              )}"
               download
               target="_blank"
               rel="noopener"
@@ -721,33 +1505,68 @@ function openDrawer(id) {
           `
           : ''
       }
+
     </div>
   `;
 
-  document
-    .getElementById('saveOrderBtn')
-    .addEventListener('click', () => {
-      saveOrder(order.id);
-    });
 
-  drawerOverlay.classList.add('open');
+  document
+    .getElementById(
+      'saveOrderBtn'
+    )
+    .addEventListener(
+      'click',
+      function() {
+
+        saveOrder(
+          order.id
+        );
+
+      }
+    );
+
+
+  drawerOverlay.classList.add(
+    'open'
+  );
 }
 
+
+/* =========================================================
+   SAVE ORDER
+========================================================= */
+
 async function saveOrder(id) {
+
   const status =
-    document.getElementById('statusSelect').value;
+    document.getElementById(
+      'statusSelect'
+    ).value;
+
 
   const payment_status =
-    document.getElementById('paymentSelect').value;
+    document.getElementById(
+      'paymentSelect'
+    ).value;
+
 
   const button =
-    document.getElementById('saveOrderBtn');
+    document.getElementById(
+      'saveOrderBtn'
+    );
+
 
   button.disabled = true;
-  button.textContent = 'Sparar…';
+
+  button.textContent =
+    'Sparar…';
+
 
   try {
-    const { error } =
+
+    const {
+      error
+    } =
       await supabaseClient
         .from('orders')
         .update({
@@ -756,62 +1575,123 @@ async function saveOrder(id) {
         })
         .eq('id', id);
 
+
     if (error) {
-      alert('Kunde inte spara: ' + error.message);
+
+      console.error(
+        'saveOrder error:',
+        error
+      );
+
+
+      alert(
+        'Kunde inte spara: ' +
+        error.message
+      );
+
       return;
     }
 
+
     await loadOrders();
 
-    drawerOverlay.classList.remove('open');
 
-  } catch (err) {
-    console.error('saveOrder error:', err);
+    drawerOverlay.classList.remove(
+      'open'
+    );
 
-    alert('Kunde inte spara ändringarna.');
+
+  } catch (error) {
+
+    console.error(
+      'Unexpected save error:',
+      error
+    );
+
+
+    alert(
+      'Kunde inte spara ändringarna.'
+    );
+
+
   } finally {
+
     button.disabled = false;
-    button.textContent = 'Spara ändringar';
+
+    button.textContent =
+      'Spara ändringar';
   }
 }
 
+
+/* =========================================================
+   CLOSE DRAWER
+========================================================= */
+
 document
   .getElementById('closeDrawer')
-  .addEventListener('click', () => {
-    drawerOverlay.classList.remove('open');
-  });
+  .addEventListener(
+    'click',
+    function() {
 
-drawerOverlay.addEventListener('click', event => {
-  if (event.target === drawerOverlay) {
-    drawerOverlay.classList.remove('open');
+      drawerOverlay.classList.remove(
+        'open'
+      );
+
+    }
+  );
+
+
+drawerOverlay.addEventListener(
+  'click',
+  function(event) {
+
+    if (
+      event.target ===
+      drawerOverlay
+    ) {
+
+      drawerOverlay.classList.remove(
+        'open'
+      );
+    }
+
   }
-});
+);
+
 
 /* =========================================================
    START
-   ========================================================= */
+========================================================= */
 
 (async function startAdmin() {
-  const ok = initSupabase();
 
-  if (!ok) {
+  console.log(
+    'Starting LAUNCH admin...'
+  );
+
+
+  const initialized =
+    initSupabase();
+
+
+  if (!initialized) {
     return;
   }
 
+
   /*
-   * Listen for auth changes AFTER Supabase has been initialized.
+   * Listen for authentication changes.
    */
-  supabaseClient.auth.onAuthStateChange((event, session) => {
-    console.log('Auth event:', event);
 
-    if (event === 'SIGNED_IN' && session) {
-      showApp(session);
-    }
+  setupAuthListener();
 
-    if (event === 'SIGNED_OUT') {
-      showLogin();
-    }
-  });
+
+  /*
+   * Check whether we already have
+   * an authenticated session.
+   */
 
   await checkSession();
+
 })();
