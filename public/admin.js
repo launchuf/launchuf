@@ -1,44 +1,106 @@
-const cfg = window.LAUNCH_CONFIG || {};
-
-const loginScreen = document.getElementById('loginScreen');
-const adminApp = document.getElementById('adminApp');
-const loginForm = document.getElementById('loginForm');
-const loginError = document.getElementById('loginError');
-const loadError = document.getElementById('loadError');
-const loginBtn = document.getElementById('loginBtn');
-const userEmail = document.getElementById('userEmail');
-
-let supabaseClient = null;
-
-let allOrders = [];
-let activeFilter = 'all';
+const cfg =
+  window.LAUNCH_CONFIG || {};
 
 
-/* =========================================================
-   STATUS LABELS
-========================================================= */
+const loginScreen =
+  document.getElementById(
+    'loginScreen'
+  );
+
+
+const adminApp =
+  document.getElementById(
+    'adminApp'
+  );
+
+
+const loginForm =
+  document.getElementById(
+    'loginForm'
+  );
+
+
+const loginError =
+  document.getElementById(
+    'loginError'
+  );
+
+
+const loadError =
+  document.getElementById(
+    'loadError'
+  );
+
+
+const loginBtn =
+  document.getElementById(
+    'loginBtn'
+  );
+
+
+const userEmail =
+  document.getElementById(
+    'userEmail'
+  );
+
+
+let supabaseClient =
+  null;
+
+
+let allOrders =
+  [];
+
+
+let activeFilter =
+  'all';
+
 
 const STATUS_LABELS = {
-  new: 'Ny',
-  contacted: 'Kontaktad',
-  in_progress: 'Pågår',
-  review: 'Granskning',
-  completed: 'Klar',
-  cancelled: 'Avbruten'
+
+  new:
+    'Ny',
+
+  contacted:
+    'Kontaktad',
+
+  in_progress:
+    'Pågår',
+
+  review:
+    'Granskning',
+
+  completed:
+    'Klar',
+
+  cancelled:
+    'Avbruten'
+
 };
 
 
 const PAYMENT_LABELS = {
-  unpaid: 'Obetald',
-  pending: 'Väntar',
-  paid: 'Betald',
-  failed: 'Misslyckad',
-  refunded: 'Återbetald'
+
+  unpaid:
+    'Betala senare',
+
+  pending:
+    'Betalning pågår',
+
+  paid:
+    'Betald',
+
+  failed:
+    'Misslyckad',
+
+  refunded:
+    'Återbetald'
+
 };
 
 
 /* =========================================================
-   SUPABASE INIT
+   SUPABASE
 ========================================================= */
 
 function initSupabase() {
@@ -46,27 +108,35 @@ function initSupabase() {
   try {
 
     if (!window.supabase) {
+
       throw new Error(
         'Supabase-biblioteket laddades inte.'
       );
+
     }
+
 
     if (
       !cfg.supabaseUrl ||
       cfg.supabaseUrl.includes('YOUR_')
     ) {
+
       throw new Error(
         'supabaseUrl saknas i config.js.'
       );
+
     }
+
 
     if (
       !cfg.supabaseAnonKey ||
       cfg.supabaseAnonKey.includes('YOUR_')
     ) {
+
       throw new Error(
         'supabaseAnonKey saknas i config.js.'
       );
+
     }
 
 
@@ -77,12 +147,8 @@ function initSupabase() {
       );
 
 
-    console.log(
-      'Supabase initialized successfully'
-    );
-
-
     return true;
+
 
   } catch (error) {
 
@@ -96,133 +162,91 @@ function initSupabase() {
       `Sidan kunde inte starta: ${error.message}`;
 
 
-    loadError.hidden = false;
+    loadError.hidden =
+      false;
 
 
-    loginBtn.disabled = true;
+    loginBtn.disabled =
+      true;
 
 
     return false;
+
   }
+
 }
 
 
 /* =========================================================
-   LOGIN / APP SCREEN
+   LOGIN / APP
 ========================================================= */
 
 function showLogin() {
 
-  console.log(
-    'Showing login screen'
-  );
+  loginScreen.hidden =
+    false;
 
 
-  /*
-   * IMPORTANT:
-   * admin.css sets .login-screen { display:flex }
-   * which can override [hidden].
-   *
-   * Therefore we explicitly control display here.
-   */
-
-  loginScreen.hidden = false;
-  loginScreen.style.display = 'flex';
+  loginScreen.style.display =
+    'flex';
 
 
-  adminApp.hidden = true;
-  adminApp.style.display = 'none';
+  adminApp.hidden =
+    true;
+
+
+  adminApp.style.display =
+    'none';
+
 }
 
 
 function showApp(session) {
-
-  console.log(
-    'Showing admin app',
-    session
-  );
-
 
   if (
     !session ||
     !session.user
   ) {
 
-    console.error(
-      'showApp called without valid session'
-    );
-
     showLogin();
 
     return;
+
   }
 
 
-  /*
-   * Explicitly hide login screen.
-   */
-
-  loginScreen.hidden = true;
-  loginScreen.style.display = 'none';
+  loginScreen.hidden =
+    true;
 
 
-  /*
-   * Explicitly show admin app.
-   */
-
-  adminApp.hidden = false;
-  adminApp.style.display = 'block';
+  loginScreen.style.display =
+    'none';
 
 
-  /*
-   * Show logged in user.
-   */
+  adminApp.hidden =
+    false;
+
+
+  adminApp.style.display =
+    'block';
+
 
   userEmail.textContent =
     session.user.email || '';
 
 
-  console.log(
-    'Login screen hidden:',
-    loginScreen.hidden
-  );
-
-  console.log(
-    'Login screen display:',
-    loginScreen.style.display
-  );
-
-  console.log(
-    'Admin app hidden:',
-    adminApp.hidden
-  );
-
-  console.log(
-    'Admin app display:',
-    adminApp.style.display
-  );
-
-
-  /*
-   * Load orders after successful login.
-   */
-
   loadOrders();
+
 }
 
 
 /* =========================================================
-   CHECK EXISTING SESSION
+   SESSION
 ========================================================= */
 
 async function checkSession() {
 
   try {
-
-    console.log(
-      'Checking existing Supabase session...'
-    );
-
 
     const {
       data,
@@ -238,31 +262,26 @@ async function checkSession() {
         error
       );
 
+
       showLogin();
 
       return;
+
     }
 
 
-    const session =
-      data?.session || null;
+    if (
+      data?.session
+    ) {
 
-
-    if (session) {
-
-      console.log(
-        'Existing session found'
+      showApp(
+        data.session
       );
-
-      showApp(session);
 
     } else {
 
-      console.log(
-        'No existing session'
-      );
-
       showLogin();
+
     }
 
 
@@ -273,8 +292,11 @@ async function checkSession() {
       error
     );
 
+
     showLogin();
+
   }
+
 }
 
 
@@ -284,18 +306,17 @@ async function checkSession() {
 
 loginForm.addEventListener(
   'submit',
-  async function(event) {
+  async event => {
 
     event.preventDefault();
 
 
-    console.log(
-      'LOGIN BUTTON PRESSED'
-    );
+    loginError.hidden =
+      true;
 
 
-    loginError.hidden = true;
-    loginError.textContent = '';
+    loginError.textContent =
+      '';
 
 
     const email =
@@ -306,29 +327,9 @@ loginForm.addEventListener(
       loginForm.elements.password.value;
 
 
-    if (!email) {
+    loginBtn.disabled =
+      true;
 
-      loginError.textContent =
-        'Fyll i e-post.';
-
-      loginError.hidden = false;
-
-      return;
-    }
-
-
-    if (!password) {
-
-      loginError.textContent =
-        'Fyll i lösenord.';
-
-      loginError.hidden = false;
-
-      return;
-    }
-
-
-    loginBtn.disabled = true;
 
     loginBtn.textContent =
       'Loggar in…';
@@ -336,100 +337,53 @@ loginForm.addEventListener(
 
     try {
 
-      console.log(
-        'Calling Supabase signInWithPassword...'
-      );
-
-
       const {
         data,
         error
       } =
         await supabaseClient.auth
           .signInWithPassword({
+
             email,
             password
+
           });
 
 
-      console.log(
-        'Supabase login response:',
-        {
-          error:
-            error?.message || null,
-
-          hasSession:
-            !!data?.session,
-
-          hasUser:
-            !!data?.user
-        }
-      );
-
-
-      /*
-       * Supabase returned an error.
-       */
-
       if (error) {
 
-        console.error(
-          'Supabase login error:',
-          error
-        );
-
-
         loginError.textContent =
-          getLoginErrorMessage(error);
+          getLoginErrorMessage(
+            error
+          );
 
 
-        loginError.hidden = false;
+        loginError.hidden =
+          false;
 
 
         return;
+
       }
 
 
-      /*
-       * Supabase says login succeeded,
-       * but make absolutely sure we have
-       * a session and user.
-       */
-
       if (
-        !data ||
-        !data.session ||
-        !data.user
+        !data?.session ||
+        !data?.user
       ) {
-
-        console.error(
-          'Login returned no valid session:',
-          data
-        );
-
 
         loginError.textContent =
           'Inloggningen lyckades inte skapa en aktiv session.';
 
 
-        loginError.hidden = false;
+        loginError.hidden =
+          false;
 
 
         return;
+
       }
 
-
-      console.log(
-        'AUTH SUCCESS — SWITCHING TO ADMIN'
-      );
-
-
-      /*
-       * THIS IS THE IMPORTANT PART.
-       *
-       * The login screen is explicitly
-       * hidden with display:none.
-       */
 
       showApp(
         data.session
@@ -448,15 +402,19 @@ loginForm.addEventListener(
         'Något gick fel vid inloggningen. Försök igen.';
 
 
-      loginError.hidden = false;
+      loginError.hidden =
+        false;
 
 
     } finally {
 
-      loginBtn.disabled = false;
+      loginBtn.disabled =
+        false;
+
 
       loginBtn.textContent =
         'Logga in';
+
     }
 
   }
@@ -464,47 +422,38 @@ loginForm.addEventListener(
 
 
 /* =========================================================
-   AUTH STATE
+   AUTH EVENTS
 ========================================================= */
 
 function setupAuthListener() {
 
-  if (!supabaseClient) {
-    return;
-  }
+  supabaseClient.auth
+    .onAuthStateChange(
+      (event, session) => {
+
+        if (
+          event === 'SIGNED_IN' &&
+          session
+        ) {
+
+          showApp(
+            session
+          );
+
+        }
 
 
-  supabaseClient.auth.onAuthStateChange(
-    function(event, session) {
+        if (
+          event === 'SIGNED_OUT'
+        ) {
 
-      console.log(
-        'Auth event:',
-        event
-      );
+          showLogin();
 
+        }
 
-      if (
-        event === 'SIGNED_IN' &&
-        session
-      ) {
-
-        showApp(session);
-
-        return;
       }
+    );
 
-
-      if (
-        event === 'SIGNED_OUT'
-      ) {
-
-        showLogin();
-
-        return;
-      }
-
-    }
-  );
 }
 
 
@@ -513,22 +462,21 @@ function setupAuthListener() {
 ========================================================= */
 
 document
-  .getElementById('logoutBtn')
+  .getElementById(
+    'logoutBtn'
+  )
   .addEventListener(
     'click',
-    async function() {
+    async () => {
 
       try {
-
-        console.log(
-          'Logging out...'
-        );
-
 
         const {
           error
         } =
-          await supabaseClient.auth.signOut();
+          await supabaseClient
+            .auth
+            .signOut();
 
 
         if (error) {
@@ -550,6 +498,7 @@ document
       } finally {
 
         showLogin();
+
       }
 
     }
@@ -557,10 +506,12 @@ document
 
 
 /* =========================================================
-   LOGIN ERROR TEXT
+   LOGIN ERRORS
 ========================================================= */
 
-function getLoginErrorMessage(error) {
+function getLoginErrorMessage(
+  error
+) {
 
   const message =
     String(
@@ -574,7 +525,10 @@ function getLoginErrorMessage(error) {
     )
   ) {
 
-    return 'Fel e-post eller lösenord.';
+    return (
+      'Fel e-post eller lösenord.'
+    );
+
   }
 
 
@@ -584,7 +538,10 @@ function getLoginErrorMessage(error) {
     )
   ) {
 
-    return 'E-postadressen är inte bekräftad ännu.';
+    return (
+      'E-postadressen är inte bekräftad ännu.'
+    );
+
   }
 
 
@@ -594,7 +551,10 @@ function getLoginErrorMessage(error) {
     )
   ) {
 
-    return 'För många försök. Vänta en stund och försök igen.';
+    return (
+      'För många försök. Vänta en stund och försök igen.'
+    );
+
   }
 
 
@@ -602,6 +562,7 @@ function getLoginErrorMessage(error) {
     error?.message ||
     'Kunde inte logga in.'
   );
+
 }
 
 
@@ -618,14 +579,19 @@ async function loadOrders() {
 
 
   tbody.innerHTML = `
+
     <tr>
+
       <td
-        colspan="7"
+        colspan="8"
         class="empty-row"
       >
         Laddar beställningar…
+
       </td>
+
     </tr>
+
   `;
 
 
@@ -655,18 +621,28 @@ async function loadOrders() {
 
 
       tbody.innerHTML = `
+
         <tr>
+
           <td
-            colspan="7"
+            colspan="8"
             class="empty-row"
           >
+
             Kunde inte hämta beställningar:
-            ${escapeHtml(error.message)}
+            ${escapeHtml(
+              error.message
+            )}
+
           </td>
+
         </tr>
+
       `;
 
+
       return;
+
     }
 
 
@@ -690,16 +666,22 @@ async function loadOrders() {
 
 
     tbody.innerHTML = `
+
       <tr>
+
         <td
-          colspan="7"
+          colspan="8"
           class="empty-row"
         >
           Kunde inte hämta beställningar.
         </td>
+
       </tr>
+
     `;
+
   }
+
 }
 
 
@@ -715,84 +697,161 @@ function renderStats() {
 
   const paid =
     allOrders.filter(
-      order =>
-        order.payment_status === 'paid'
+      o =>
+        o.payment_status ===
+        'paid'
+    ).length;
+
+
+  const pending =
+    allOrders.filter(
+      o =>
+        o.payment_status ===
+        'pending'
+    ).length;
+
+
+  const unpaid =
+    allOrders.filter(
+      o =>
+        o.payment_status ===
+        'unpaid'
     ).length;
 
 
   const revenue =
     allOrders
       .filter(
-        order =>
-          order.payment_status === 'paid'
+        o =>
+          o.payment_status ===
+          'paid'
       )
       .reduce(
-        (sum, order) =>
+        (sum, o) =>
           sum +
-          (Number(order.amount_kr) || 0),
+          (
+            Number(
+              o.amount_kr
+            ) || 0
+          ),
         0
       );
 
 
-  const active =
-    allOrders.filter(
-      order =>
-        ![
-          'completed',
-          'cancelled'
-        ].includes(order.status)
-    ).length;
-
-
-  const grow =
-    allOrders.filter(
-      order =>
-        order.package === 'GROW'
-    ).length;
-
-
-  const scale =
-    allOrders.filter(
-      order =>
-        order.package === 'SCALE'
-    ).length;
-
-
   document
-    .getElementById('adminStats')
+    .getElementById(
+      'adminStats'
+    )
     .innerHTML = [
 
-      ['Totalt', total],
-
-      ['Betalda', paid],
-
-      ['Intäkt', `${revenue} kr`],
-
-      ['Aktiva', active],
+      [
+        'Beställningar',
+        total
+      ],
 
       [
-        'GROW / SCALE',
-        `${grow} / ${scale}`
+        'Betalda',
+        paid
+      ],
+
+      [
+        'Pågår',
+        pending
+      ],
+
+      [
+        'Betala senare',
+        unpaid
+      ],
+
+      [
+        'Intäkt',
+        `${revenue} kr`
       ]
 
     ]
       .map(
-        function([label, value]) {
+        ([label, value]) => `
 
-          return `
-            <div class="mini-stat">
-              <span class="num">
-                ${escapeHtml(value)}
-              </span>
+          <div class="mini-stat">
 
-              <span class="lbl">
-                ${escapeHtml(label)}
-              </span>
-            </div>
-          `;
-        }
+            <span class="num">
+              ${escapeHtml(
+                value
+              )}
+            </span>
+
+            <span class="lbl">
+              ${escapeHtml(
+                label
+              )}
+            </span>
+
+          </div>
+
+        `
       )
       .join('');
+
+}
+
+
+/* =========================================================
+   CUSTOMER-FACING PACKAGE NAME
+========================================================= */
+
+function customerPackageLabel() {
+
+  return 'Hemsida';
+
+}
+
+
+/* =========================================================
+   DOMAIN LABEL
+========================================================= */
+
+function domainLabel(
+  value
+) {
+
+  if (
+    value === 'setup'
+  ) {
+
+    return (
+      'Egen domän +99 kr'
+    );
+
+  }
+
+
+  if (
+    value === 'existing'
+  ) {
+
+    return (
+      'Har egen domän'
+    );
+
+  }
+
+
+  if (
+    value === 'none'
+  ) {
+
+    return (
+      'Ingen domän / ingen hjälp'
+    );
+
+  }
+
+
+  return (
+    value || '—'
+  );
+
 }
 
 
@@ -804,7 +863,9 @@ function renderTable() {
 
   const search =
     document
-      .getElementById('searchInput')
+      .getElementById(
+        'searchInput'
+      )
       .value
       .trim()
       .toLowerCase();
@@ -812,7 +873,7 @@ function renderTable() {
 
   const rows =
     allOrders.filter(
-      function(order) {
+      order => {
 
         if (
           activeFilter !== 'all' &&
@@ -820,23 +881,29 @@ function renderTable() {
         ) {
 
           return false;
+
         }
 
 
         if (!search) {
+
           return true;
+
         }
 
 
         return [
+
           order.order_number,
           order.company_name,
           order.email,
           order.contact_name
+
         ]
           .join(' ')
           .toLowerCase()
           .includes(search);
+
       }
     );
 
@@ -850,75 +917,97 @@ function renderTable() {
   if (!rows.length) {
 
     tbody.innerHTML = `
+
       <tr>
+
         <td
-          colspan="7"
+          colspan="8"
           class="empty-row"
         >
           Inga beställningar matchar.
         </td>
+
       </tr>
+
     `;
 
+
     return;
+
   }
 
 
   tbody.innerHTML =
     rows
       .map(
-        function(order) {
+        order => `
 
-          return `
-            <tr
-              data-id="${escapeHtml(order.id)}"
-            >
+          <tr
+            data-id="${escapeHtml(
+              order.id
+            )}"
+          >
 
-              <td class="order-num">
-                ${escapeHtml(
-                  order.order_number
-                )}
-              </td>
+            <td class="order-num">
+              ${escapeHtml(
+                order.order_number
+              )}
+            </td>
 
-              <td>
-                ${escapeHtml(
-                  order.company_name
-                )}
-              </td>
 
-              <td>
-                ${escapeHtml(
-                  order.package
-                )}
-              </td>
+            <td>
+              ${escapeHtml(
+                order.company_name
+              )}
+            </td>
 
-              <td>
-                ${badge(
-                  order.payment_status,
-                  PAYMENT_LABELS
-                )}
-              </td>
 
-              <td>
-                ${badge(
-                  order.status,
-                  STATUS_LABELS
-                )}
-              </td>
+            <td>
+              ${customerPackageLabel(
+                order
+              )}
+            </td>
 
-              <td>
-                ${formatDate(
-                  order.created_at
-                )}
-              </td>
 
-              <td>
-                →
-              </td>
+            <td>
+              ${badge(
+                order.payment_status,
+                PAYMENT_LABELS
+              )}
+            </td>
 
-            </tr>
-          `;
-        }
+
+            <td>
+              ${escapeHtml(
+                order.amount_kr
+                  ? `${order.amount_kr} kr`
+                  : '—'
+              )}
+            </td>
+
+
+            <td>
+              ${badge(
+                order.status,
+                STATUS_LABELS
+              )}
+            </td>
+
+
+            <td>
+              ${formatDate(
+                order.created_at
+              )}
+            </td>
+
+
+            <td>
+              →
+            </td>
+
+          </tr>
+
+        `
       )
       .join('');
 
@@ -928,11 +1017,11 @@ function renderTable() {
       'tr[data-id]'
     )
     .forEach(
-      function(row) {
+      row => {
 
         row.addEventListener(
           'click',
-          function() {
+          () => {
 
             openDrawer(
               row.dataset.id
@@ -943,6 +1032,7 @@ function renderTable() {
 
       }
     );
+
 }
 
 
@@ -956,10 +1046,13 @@ function badge(
 ) {
 
   const safeValue =
-    String(value || '');
+    String(
+      value || ''
+    );
 
 
   return `
+
     <span
       class="badge badge-${escapeHtml(
         safeValue
@@ -974,7 +1067,9 @@ function badge(
       )}
 
     </span>
+
   `;
+
 }
 
 
@@ -982,7 +1077,9 @@ function badge(
    DATE
 ========================================================= */
 
-function formatDate(iso) {
+function formatDate(
+  iso
+) {
 
   if (!iso) {
     return '—';
@@ -1000,17 +1097,21 @@ function formatDate(iso) {
   ) {
 
     return '—';
+
   }
 
 
   return date.toLocaleDateString(
     'sv-SE',
     {
+
       day: 'numeric',
       month: 'short',
       year: 'numeric'
+
     }
   );
+
 }
 
 
@@ -1018,32 +1119,47 @@ function formatDate(iso) {
    ESCAPE HTML
 ========================================================= */
 
-function escapeHtml(value = '') {
+function escapeHtml(
+  value = ''
+) {
 
   return String(value)
     .replace(
       /[&<>"']/g,
-      function(character) {
+      character =>
+        ({
 
-        return {
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#39;'
-        }[character];
+          '&':
+            '&amp;',
 
-      }
+          '<':
+            '&lt;',
+
+          '>':
+            '&gt;',
+
+          '"':
+            '&quot;',
+
+          "'":
+            '&#39;'
+
+        })[
+          character
+        ]
     );
+
 }
 
 
 /* =========================================================
-   FILTER / SEARCH
+   FILTERS / SEARCH
 ========================================================= */
 
 document
-  .getElementById('refreshBtn')
+  .getElementById(
+    'refreshBtn'
+  )
   .addEventListener(
     'click',
     loadOrders
@@ -1051,7 +1167,9 @@ document
 
 
 document
-  .getElementById('searchInput')
+  .getElementById(
+    'searchInput'
+  )
   .addEventListener(
     'input',
     renderTable
@@ -1059,10 +1177,12 @@ document
 
 
 document
-  .getElementById('filterTabs')
+  .getElementById(
+    'filterTabs'
+  )
   .addEventListener(
     'click',
-    function(event) {
+    event => {
 
       const button =
         event.target.closest(
@@ -1080,13 +1200,10 @@ document
           '.filter-tab'
         )
         .forEach(
-          function(tab) {
-
+          tab =>
             tab.classList.remove(
               'active'
-            );
-
-          }
+            )
         );
 
 
@@ -1100,6 +1217,7 @@ document
 
 
       renderTable();
+
     }
   );
 
@@ -1124,12 +1242,9 @@ function openDrawer(id) {
 
   const order =
     allOrders.find(
-      function(item) {
-
-        return String(item.id) ===
-          String(id);
-
-      }
+      item =>
+        String(item.id) ===
+        String(id)
     );
 
 
@@ -1148,13 +1263,17 @@ function openDrawer(id) {
 
 
     <p class="order-meta">
+
       ${escapeHtml(
         order.order_number
       )}
+
       ·
+
       ${formatDate(
         order.created_at
       )}
+
     </p>
 
 
@@ -1165,24 +1284,22 @@ function openDrawer(id) {
         STATUS_LABELS
       )}
 
+
       ${badge(
         order.payment_status,
         PAYMENT_LABELS
       )}
 
+
       <span class="badge">
 
+        Hemsida ·
+
         ${escapeHtml(
-          order.package
+          order.amount_kr || 299
         )}
 
-        ${
-          order.amount_kr
-            ? ` · ${escapeHtml(
-                order.amount_kr
-              )} kr`
-            : ''
-        }
+        kr
 
       </span>
 
@@ -1192,6 +1309,7 @@ function openDrawer(id) {
     ${
       order.logo_url
         ? `
+
           <img
             class="logo-preview"
             src="${escapeHtml(
@@ -1201,6 +1319,7 @@ function openDrawer(id) {
               order.company_name
             )}"
           >
+
         `
         : ''
     }
@@ -1209,82 +1328,128 @@ function openDrawer(id) {
     <div class="detail-grid">
 
       <div>
-        <span>Kontaktperson</span>
+
+        <span>
+          Kontaktperson
+        </span>
+
         <strong>
           ${escapeHtml(
             order.contact_name
           )}
         </strong>
+
       </div>
 
 
       <div>
-        <span>E-post</span>
+
+        <span>
+          E-post
+        </span>
+
         <strong>
           ${escapeHtml(
             order.email
           )}
         </strong>
+
       </div>
 
 
       <div>
-        <span>Telefon</span>
+
+        <span>
+          Telefon
+        </span>
+
         <strong>
           ${escapeHtml(
             order.phone || '—'
           )}
         </strong>
+
       </div>
 
 
       <div>
-        <span>Instagram</span>
+
+        <span>
+          Instagram
+        </span>
+
         <strong>
           ${escapeHtml(
             order.instagram || '—'
           )}
         </strong>
+
       </div>
 
 
       <div>
-        <span>TikTok</span>
+
+        <span>
+          TikTok
+        </span>
+
         <strong>
           ${escapeHtml(
             order.tiktok || '—'
           )}
         </strong>
+
       </div>
 
 
       <div>
-        <span>Stil</span>
+
+        <span>
+          Domän
+        </span>
+
         <strong>
           ${escapeHtml(
-            order.style || '—'
+            domainLabel(
+              order.domain_status
+            )
           )}
         </strong>
+
       </div>
 
 
       <div>
-        <span>Färger</span>
-        <strong>
-          ${escapeHtml(
-            order.colors || '—'
-          )}
-        </strong>
-      </div>
 
+        <span>
+          Lanseringsdatum
+        </span>
 
-      <div>
-        <span>Lanseringsdatum</span>
         <strong>
           ${escapeHtml(
             order.launch_date || '—'
           )}
         </strong>
+
+      </div>
+
+
+      <div>
+
+        <span>
+          Betalning
+        </span>
+
+        <strong>
+          ${escapeHtml(
+            PAYMENT_LABELS[
+              order.payment_status
+            ] ||
+            order.payment_status ||
+            '—'
+          )}
+        </strong>
+
       </div>
 
     </div>
@@ -1298,7 +1463,8 @@ function openDrawer(id) {
 
       <p>
         ${escapeHtml(
-          order.business_description || '—'
+          order.business_description ||
+          '—'
         )}
       </p>
 
@@ -1306,8 +1472,60 @@ function openDrawer(id) {
 
 
     ${
-      order.website_feel
+      order.colors
+
         ? `
+
+          <div class="detail-block">
+
+            <h4>
+              Färger
+            </h4>
+
+            <p>
+              ${escapeHtml(
+                order.colors
+              )}
+            </p>
+
+          </div>
+
+        `
+
+        : ''
+    }
+
+
+    ${
+      order.style
+
+        ? `
+
+          <div class="detail-block">
+
+            <h4>
+              Stil
+            </h4>
+
+            <p>
+              ${escapeHtml(
+                order.style
+              )}
+            </p>
+
+          </div>
+
+        `
+
+        : ''
+    }
+
+
+    ${
+      order.website_feel
+
+        ? `
+
           <div class="detail-block">
 
             <h4>
@@ -1321,18 +1539,22 @@ function openDrawer(id) {
             </p>
 
           </div>
+
         `
+
         : ''
     }
 
 
     ${
       order.pages
+
         ? `
+
           <div class="detail-block">
 
             <h4>
-              Önskade sidor
+              Önskade delar
             </h4>
 
             <p>
@@ -1342,14 +1564,18 @@ function openDrawer(id) {
             </p>
 
           </div>
+
         `
+
         : ''
     }
 
 
     ${
       order.references
+
         ? `
+
           <div class="detail-block">
 
             <h4>
@@ -1363,14 +1589,18 @@ function openDrawer(id) {
             </p>
 
           </div>
+
         `
+
         : ''
     }
 
 
     ${
       order.extra_information
+
         ? `
+
           <div class="detail-block">
 
             <h4>
@@ -1384,7 +1614,9 @@ function openDrawer(id) {
             </p>
 
           </div>
+
         `
+
         : ''
     }
 
@@ -1395,18 +1627,16 @@ function openDrawer(id) {
         Orderstatus
       </label>
 
+
       <select id="statusSelect">
 
-        ${Object.entries(
-          STATUS_LABELS
-        )
-          .map(
-            function([
-              value,
-              label
-            ]) {
+        ${
+          Object.entries(
+            STATUS_LABELS
+          )
+            .map(
+              ([value, label]) => `
 
-              return `
                 <option
                   value="${escapeHtml(
                     value
@@ -1418,15 +1648,17 @@ function openDrawer(id) {
                       : ''
                   }
                 >
+
                   ${escapeHtml(
                     label
                   )}
-                </option>
-              `;
 
-            }
-          )
-          .join('')}
+                </option>
+
+              `
+            )
+            .join('')
+        }
 
       </select>
 
@@ -1439,18 +1671,16 @@ function openDrawer(id) {
         Betalstatus
       </label>
 
+
       <select id="paymentSelect">
 
-        ${Object.entries(
-          PAYMENT_LABELS
-        )
-          .map(
-            function([
-              value,
-              label
-            ]) {
+        ${
+          Object.entries(
+            PAYMENT_LABELS
+          )
+            .map(
+              ([value, label]) => `
 
-              return `
                 <option
                   value="${escapeHtml(
                     value
@@ -1462,15 +1692,17 @@ function openDrawer(id) {
                       : ''
                   }
                 >
+
                   ${escapeHtml(
                     label
                   )}
-                </option>
-              `;
 
-            }
-          )
-          .join('')}
+                </option>
+
+              `
+            )
+            .join('')
+        }
 
       </select>
 
@@ -1490,7 +1722,9 @@ function openDrawer(id) {
 
       ${
         order.logo_url
+
           ? `
+
             <a
               class="button button-ghost"
               href="${escapeHtml(
@@ -1502,11 +1736,14 @@ function openDrawer(id) {
             >
               Ladda ner logga
             </a>
+
           `
+
           : ''
       }
 
     </div>
+
   `;
 
 
@@ -1516,7 +1753,7 @@ function openDrawer(id) {
     )
     .addEventListener(
       'click',
-      function() {
+      () => {
 
         saveOrder(
           order.id
@@ -1529,6 +1766,7 @@ function openDrawer(id) {
   drawerOverlay.classList.add(
     'open'
   );
+
 }
 
 
@@ -1536,7 +1774,9 @@ function openDrawer(id) {
    SAVE ORDER
 ========================================================= */
 
-async function saveOrder(id) {
+async function saveOrder(
+  id
+) {
 
   const status =
     document.getElementById(
@@ -1550,15 +1790,17 @@ async function saveOrder(id) {
     ).value;
 
 
-  const button =
+  const btn =
     document.getElementById(
       'saveOrderBtn'
     );
 
 
-  button.disabled = true;
+  btn.disabled =
+    true;
 
-  button.textContent =
+
+  btn.textContent =
     'Sparar…';
 
 
@@ -1573,23 +1815,22 @@ async function saveOrder(id) {
           status,
           payment_status
         })
-        .eq('id', id);
+        .eq(
+          'id',
+          id
+        );
 
 
     if (error) {
-
-      console.error(
-        'saveOrder error:',
-        error
-      );
-
 
       alert(
         'Kunde inte spara: ' +
         error.message
       );
 
+
       return;
+
     }
 
 
@@ -1604,7 +1845,7 @@ async function saveOrder(id) {
   } catch (error) {
 
     console.error(
-      'Unexpected save error:',
+      'saveOrder error:',
       error
     );
 
@@ -1616,23 +1857,29 @@ async function saveOrder(id) {
 
   } finally {
 
-    button.disabled = false;
+    btn.disabled =
+      false;
 
-    button.textContent =
+
+    btn.textContent =
       'Spara ändringar';
+
   }
+
 }
 
 
 /* =========================================================
-   CLOSE DRAWER
+   DRAWER CLOSE
 ========================================================= */
 
 document
-  .getElementById('closeDrawer')
+  .getElementById(
+    'closeDrawer'
+  )
   .addEventListener(
     'click',
-    function() {
+    () => {
 
       drawerOverlay.classList.remove(
         'open'
@@ -1644,7 +1891,7 @@ document
 
 drawerOverlay.addEventListener(
   'click',
-  function(event) {
+  event => {
 
     if (
       event.target ===
@@ -1654,6 +1901,7 @@ drawerOverlay.addEventListener(
       drawerOverlay.classList.remove(
         'open'
       );
+
     }
 
   }
@@ -1666,11 +1914,6 @@ drawerOverlay.addEventListener(
 
 (async function startAdmin() {
 
-  console.log(
-    'Starting LAUNCH admin...'
-  );
-
-
   const initialized =
     initSupabase();
 
@@ -1680,17 +1923,8 @@ drawerOverlay.addEventListener(
   }
 
 
-  /*
-   * Listen for authentication changes.
-   */
-
   setupAuthListener();
 
-
-  /*
-   * Check whether we already have
-   * an authenticated session.
-   */
 
   await checkSession();
 
