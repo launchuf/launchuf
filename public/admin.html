@@ -5,32 +5,65 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>LAUNCH UF — Admin</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,460;9..144,560&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="admin.css">
 </head>
+
 <body class="admin-body">
 
 <!-- LOGIN -->
 <div class="login-screen" id="loginScreen">
-  <form class="login-card" id="loginForm" onsubmit="return false" method="dialog">
+  <form class="login-card" id="loginForm">
     <span class="brand-word">LAUNCH<span class="brand-sub">UF</span></span>
+
     <p class="login-sub">Admin — endast för Riman &amp; William</p>
-    <label><span>E-post</span><input type="email" name="email" required autocomplete="username"></label>
-    <label><span>Lösenord</span><input type="password" name="password" required autocomplete="current-password"></label>
+
+    <label>
+      <span>E-post</span>
+      <input
+        type="email"
+        name="email"
+        required
+        autocomplete="username"
+      >
+    </label>
+
+    <label>
+      <span>Lösenord</span>
+      <input
+        type="password"
+        name="password"
+        required
+        autocomplete="current-password"
+      >
+    </label>
+
     <p class="login-error" id="loginError" hidden></p>
-    <p class="login-error" id="loadError" hidden>Sidan kunde inte ladda klart (nätverk/CDN). Ladda om sidan, eller kolla F12 → Console.</p>
-    <button class="button button-primary" type="submit">Logga in</button>
+
+    <p class="login-error" id="loadError" hidden">
+      Sidan kunde inte ladda klart.
+    </p>
+
+    <button class="button button-primary" id="loginBtn" type="submit">
+      Logga in
+    </button>
   </form>
 </div>
 
 <!-- APP -->
 <div class="admin-app" id="adminApp" hidden>
   <header class="admin-header">
-    <span class="brand-word">LAUNCH<span class="brand-sub">UF</span> <em>admin</em></span>
+    <span class="brand-word">
+      LAUNCH<span class="brand-sub">UF</span> <em>admin</em>
+    </span>
+
     <div class="admin-header-right">
       <span id="userEmail" class="admin-user"></span>
-      <button class="button button-ghost" id="logoutBtn">Logga ut</button>
+      <button class="button button-ghost" id="logoutBtn" type="button">
+        Logga ut
+      </button>
     </div>
   </header>
 
@@ -39,26 +72,45 @@
 
     <div class="admin-toolbar">
       <div class="filter-tabs" id="filterTabs">
-        <button class="filter-tab active" data-status="all">Alla</button>
-        <button class="filter-tab" data-status="new">Nya</button>
-        <button class="filter-tab" data-status="contacted">Kontaktade</button>
-        <button class="filter-tab" data-status="in_progress">Pågår</button>
-        <button class="filter-tab" data-status="review">Granskning</button>
-        <button class="filter-tab" data-status="completed">Klara</button>
+        <button class="filter-tab active" data-status="all" type="button">Alla</button>
+        <button class="filter-tab" data-status="new" type="button">Nya</button>
+        <button class="filter-tab" data-status="contacted" type="button">Kontaktade</button>
+        <button class="filter-tab" data-status="in_progress" type="button">Pågår</button>
+        <button class="filter-tab" data-status="review" type="button">Granskning</button>
+        <button class="filter-tab" data-status="completed" type="button">Klara</button>
       </div>
-      <input type="search" id="searchInput" placeholder="Sök företag, e-post, ordernummer…">
-      <button class="button button-ghost" id="refreshBtn">Uppdatera</button>
+
+      <input
+        type="search"
+        id="searchInput"
+        placeholder="Sök företag, e-post, ordernummer…"
+      >
+
+      <button class="button button-ghost" id="refreshBtn" type="button">
+        Uppdatera
+      </button>
     </div>
 
     <div class="orders-table-wrap">
       <table class="orders-table">
         <thead>
           <tr>
-            <th>Order</th><th>Företag</th><th>Paket</th><th>Betalning</th><th>Status</th><th>Datum</th><th></th>
+            <th>Order</th>
+            <th>Företag</th>
+            <th>Paket</th>
+            <th>Betalning</th>
+            <th>Status</th>
+            <th>Datum</th>
+            <th></th>
           </tr>
         </thead>
+
         <tbody id="ordersBody">
-          <tr><td colspan="7" class="empty-row">Laddar beställningar…</td></tr>
+          <tr>
+            <td colspan="7" class="empty-row">
+              Laddar beställningar…
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -68,7 +120,10 @@
 <!-- ORDER DETAIL DRAWER -->
 <div class="drawer-overlay" id="drawerOverlay">
   <aside class="drawer" id="drawer">
-    <button class="modal-close" id="closeDrawer" aria-label="Stäng">×</button>
+    <button class="modal-close" id="closeDrawer" aria-label="Stäng" type="button">
+      ×
+    </button>
+
     <div class="drawer-scroll" id="drawerContent"></div>
   </aside>
 </div>
@@ -76,5 +131,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="admin.js"></script>
+
 </body>
 </html>
