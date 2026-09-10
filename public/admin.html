@@ -7,6 +7,7 @@
 <title>LAUNCH UF — Admin</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,460;9..144,560&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="admin.css">
 </head>
@@ -16,9 +17,14 @@
 <!-- LOGIN -->
 <div class="login-screen" id="loginScreen">
   <form class="login-card" id="loginForm">
-    <span class="brand-word">LAUNCH<span class="brand-sub">UF</span></span>
 
-    <p class="login-sub">Admin — endast för Riman &amp; William</p>
+    <span class="brand-word">
+      LAUNCH<span class="brand-sub">UF</span>
+    </span>
+
+    <p class="login-sub">
+      Admin — endast för Riman &amp; William
+    </p>
 
     <label>
       <span>E-post</span>
@@ -43,42 +49,113 @@
     <p class="login-error" id="loginError" hidden></p>
 
     <p class="login-error" id="loadError" hidden>
-      Sidan kunde inte ladda klart.
+      Sidan kunde inte ladda klart (nätverk/CDN).
+      Ladda om sidan, eller kolla F12 → Console.
     </p>
 
-    <button class="button button-primary" id="loginBtn" type="submit">
+    <button
+      class="button button-primary"
+      id="loginBtn"
+      type="submit"
+    >
       Logga in
     </button>
+
   </form>
 </div>
 
-<!-- APP -->
+
+<!-- ADMIN APP -->
 <div class="admin-app" id="adminApp" hidden>
+
   <header class="admin-header">
+
     <span class="brand-word">
-      LAUNCH<span class="brand-sub">UF</span> <em>admin</em>
+      LAUNCH<span class="brand-sub">UF</span>
+      <em>admin</em>
     </span>
 
     <div class="admin-header-right">
-      <span id="userEmail" class="admin-user"></span>
-      <button class="button button-ghost" id="logoutBtn" type="button">
+      <span
+        id="userEmail"
+        class="admin-user"
+      ></span>
+
+      <button
+        class="button button-ghost"
+        id="logoutBtn"
+        type="button"
+      >
         Logga ut
       </button>
     </div>
+
   </header>
 
+
   <main class="admin-main">
-    <section class="admin-stats" id="adminStats"></section>
+
+    <section
+      class="admin-stats"
+      id="adminStats"
+    ></section>
+
 
     <div class="admin-toolbar">
-      <div class="filter-tabs" id="filterTabs">
-        <button class="filter-tab active" data-status="all" type="button">Alla</button>
-        <button class="filter-tab" data-status="new" type="button">Nya</button>
-        <button class="filter-tab" data-status="contacted" type="button">Kontaktade</button>
-        <button class="filter-tab" data-status="in_progress" type="button">Pågår</button>
-        <button class="filter-tab" data-status="review" type="button">Granskning</button>
-        <button class="filter-tab" data-status="completed" type="button">Klara</button>
+
+      <div
+        class="filter-tabs"
+        id="filterTabs"
+      >
+        <button
+          class="filter-tab active"
+          data-status="all"
+          type="button"
+        >
+          Alla
+        </button>
+
+        <button
+          class="filter-tab"
+          data-status="new"
+          type="button"
+        >
+          Nya
+        </button>
+
+        <button
+          class="filter-tab"
+          data-status="contacted"
+          type="button"
+        >
+          Kontaktade
+        </button>
+
+        <button
+          class="filter-tab"
+          data-status="in_progress"
+          type="button"
+        >
+          Pågår
+        </button>
+
+        <button
+          class="filter-tab"
+          data-status="review"
+          type="button"
+        >
+          Granskning
+        </button>
+
+        <button
+          class="filter-tab"
+          data-status="completed"
+          type="button"
+        >
+          Klara
+        </button>
       </div>
+
 
       <input
         type="search"
@@ -86,13 +163,22 @@
         placeholder="Sök företag, e-post, ordernummer…"
       >
 
-      <button class="button button-ghost" id="refreshBtn" type="button">
+
+      <button
+        class="button button-ghost"
+        id="refreshBtn"
+        type="button"
+      >
         Uppdatera
       </button>
+
     </div>
 
+
     <div class="orders-table-wrap">
+
       <table class="orders-table">
+
         <thead>
           <tr>
             <th>Order</th>
@@ -107,29 +193,61 @@
 
         <tbody id="ordersBody">
           <tr>
-            <td colspan="7" class="empty-row">
+            <td
+              colspan="7"
+              class="empty-row"
+            >
               Laddar beställningar…
             </td>
           </tr>
         </tbody>
+
       </table>
+
     </div>
+
   </main>
+
 </div>
 
+
 <!-- ORDER DETAIL DRAWER -->
-<div class="drawer-overlay" id="drawerOverlay">
-  <aside class="drawer" id="drawer">
-    <button class="modal-close" id="closeDrawer" aria-label="Stäng" type="button">
+<div
+  class="drawer-overlay"
+  id="drawerOverlay"
+>
+
+  <aside
+    class="drawer"
+    id="drawer"
+  >
+
+    <button
+      class="modal-close"
+      id="closeDrawer"
+      aria-label="Stäng"
+      type="button"
+    >
       ×
     </button>
 
-    <div class="drawer-scroll" id="drawerContent"></div>
+    <div
+      class="drawer-scroll"
+      id="drawerContent"
+    ></div>
+
   </aside>
+
 </div>
 
+
+<!-- SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- CONFIG -->
 <script src="config.js"></script>
+
+<!-- ADMIN JS -->
 <script src="admin.js"></script>
 
 </body>
