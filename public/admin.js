@@ -1,11 +1,11 @@
 const cfg = window.LAUNCH_CONFIG || {};
 const loadError = document.getElementById('loadError');
-let supabase;
+let supabaseClient;
 try {
   if (!window.supabase) throw new Error('Supabase-biblioteket (CDN) laddades inte.');
   if (!cfg.supabaseUrl || cfg.supabaseUrl.includes('YOUR_')) throw new Error('supabaseUrl saknas i config.js.');
   if (!cfg.supabaseAnonKey || cfg.supabaseAnonKey.includes('YOUR_')) throw new Error('supabaseAnonKey saknas i config.js.');
-  supabase = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+  supabaseClient = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
 } catch (err) {
   console.error('LAUNCH admin — kunde inte starta:', err);
   loadError.textContent = `Sidan kunde inte starta: ${err.message}`;
@@ -28,7 +28,7 @@ let activeFilter = 'all';
 
 /* ---------- auth ---------- */
 async function checkSession() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await supabaseClient.auth.getSession();
   if (session) showApp(session);
   else showLogin();
 }
@@ -46,7 +46,7 @@ loginForm.addEventListener('submit', async e => {
   e.preventDefault();
   loginError.hidden = true;
   const fd = new FormData(loginForm);
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
     email: fd.get('email'), password: fd.get('password'),
   });
   if (error) {
@@ -57,7 +57,7 @@ loginForm.addEventListener('submit', async e => {
   showApp(data.session);
 });
 document.getElementById('logoutBtn').addEventListener('click', async () => {
-  await supabase.auth.signOut();
+  await supabaseClient.auth.signOut();
   showLogin();
 });
 
@@ -65,7 +65,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 async function loadOrders() {
   const tbody = document.getElementById('ordersBody');
   tbody.innerHTML = `<tr><td colspan="7" class="empty-row">Laddar beställningar…</td></tr>`;
-  const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+  const { data, error } = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false });
   if (error) {
     tbody.innerHTML = `<tr><td colspan="7" class="empty-row">Kunde inte hämta beställningar: ${escapeHtml(error.message)}</td></tr>`;
     return;
@@ -198,7 +198,7 @@ async function saveOrder(id) {
   const payment_status = document.getElementById('paymentSelect').value;
   const btn = document.getElementById('saveOrderBtn');
   btn.disabled = true; btn.textContent = 'Sparar…';
-  const { error } = await supabase.from('orders').update({ status, payment_status }).eq('id', id);
+  const { error } = await supabaseClient.from('orders').update({ status, payment_status }).eq('id', id);
   btn.disabled = false; btn.textContent = 'Spara ändringar';
   if (error) { alert('Kunde inte spara: ' + error.message); return; }
   await loadOrders();
