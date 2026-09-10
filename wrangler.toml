@@ -1,0 +1,9 @@
+name = "launchuf"
+main = "_worker.js"
+compatibility_date = "2026-01-01"
+
+# Detta talar om för Cloudflare: "servera alla filer i den här mappen som
+# statiska filer, och gör dem tillgängliga i _worker.js som env.ASSETS"
+[assets]
+directory = "."
+binding = "ASSETS"
