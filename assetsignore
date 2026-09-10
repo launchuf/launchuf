@@ -1,5 +1,1 @@
 _worker.js
-server/
-wrangler.toml
-supabase-schema.sql
-README.md
