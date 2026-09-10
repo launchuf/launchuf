@@ -1,57 +1,108 @@
 <!doctype html>
 <html lang="sv">
 <head>
+
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex,nofollow">
-<title>LAUNCH UF — Admin</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,460;9..144,560&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1"
+>
 
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="admin.css">
+<meta
+  name="robots"
+  content="noindex,nofollow"
+>
+
+<title>
+  LAUNCH UF — Admin
+</title>
+
+<link
+  href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,460;9..144,560&family=Inter:wght@400;500;600&display=swap"
+  rel="stylesheet"
+>
+
+<link
+  rel="stylesheet"
+  href="styles.css"
+>
+
+<link
+  rel="stylesheet"
+  href="admin.css"
+>
+
 </head>
 
 <body class="admin-body">
 
-<!-- LOGIN -->
-<div class="login-screen" id="loginScreen">
-  <form class="login-card" id="loginForm">
+
+<div
+  class="login-screen"
+  id="loginScreen"
+>
+
+  <form
+    class="login-card"
+    id="loginForm"
+  >
 
     <span class="brand-word">
       LAUNCH<span class="brand-sub">UF</span>
     </span>
 
+
     <p class="login-sub">
-      Admin — endast för Riman &amp; William
+      Admin
     </p>
 
+
     <label>
-      <span>E-post</span>
+
+      <span>
+        E-post
+      </span>
+
       <input
         type="email"
         name="email"
         required
         autocomplete="username"
       >
+
     </label>
 
+
     <label>
-      <span>Lösenord</span>
+
+      <span>
+        Lösenord
+      </span>
+
       <input
         type="password"
         name="password"
         required
         autocomplete="current-password"
       >
+
     </label>
 
-    <p class="login-error" id="loginError" hidden></p>
 
-    <p class="login-error" id="loadError" hidden>
-      Sidan kunde inte ladda klart (nätverk/CDN).
-      Ladda om sidan, eller kolla F12 → Console.
-    </p>
+    <p
+      class="login-error"
+      id="loginError"
+      hidden
+    ></p>
+
+
+    <p
+      class="login-error"
+      id="loadError"
+      hidden
+    ></p>
+
 
     <button
       class="button button-primary"
@@ -62,24 +113,38 @@
     </button>
 
   </form>
+
 </div>
 
 
-<!-- ADMIN APP -->
-<div class="admin-app" id="adminApp" hidden>
+<div
+  class="admin-app"
+  id="adminApp"
+  hidden
+>
 
   <header class="admin-header">
 
     <span class="brand-word">
-      LAUNCH<span class="brand-sub">UF</span>
-      <em>admin</em>
+
+      LAUNCH<span class="brand-sub">
+        UF
+      </span>
+
+      <em>
+        admin
+      </em>
+
     </span>
 
+
     <div class="admin-header-right">
+
       <span
         id="userEmail"
         class="admin-user"
       ></span>
+
 
       <button
         class="button button-ghost"
@@ -88,6 +153,7 @@
       >
         Logga ut
       </button>
+
     </div>
 
   </header>
@@ -107,6 +173,7 @@
         class="filter-tabs"
         id="filterTabs"
       >
+
         <button
           class="filter-tab active"
           data-status="all"
@@ -114,6 +181,7 @@
         >
           Alla
         </button>
+
 
         <button
           class="filter-tab"
@@ -123,6 +191,7 @@
           Nya
         </button>
 
+
         <button
           class="filter-tab"
           data-status="contacted"
@@ -130,6 +199,7 @@
         >
           Kontaktade
         </button>
+
 
         <button
           class="filter-tab"
@@ -139,6 +209,7 @@
           Pågår
         </button>
 
+
         <button
           class="filter-tab"
           data-status="review"
@@ -147,6 +218,7 @@
           Granskning
         </button>
 
+
         <button
           class="filter-tab"
           data-status="completed"
@@ -154,6 +226,7 @@
         >
           Klara
         </button>
+
       </div>
 
 
@@ -180,26 +253,57 @@
       <table class="orders-table">
 
         <thead>
+
           <tr>
-            <th>Order</th>
-            <th>Företag</th>
-            <th>Paket</th>
-            <th>Betalning</th>
-            <th>Status</th>
-            <th>Datum</th>
+
+            <th>
+              Order
+            </th>
+
+            <th>
+              Företag
+            </th>
+
+            <th>
+              Paket
+            </th>
+
+            <th>
+              Betalning
+            </th>
+
+            <th>
+              Summa
+            </th>
+
+            <th>
+              Status
+            </th>
+
+            <th>
+              Datum
+            </th>
+
             <th></th>
+
           </tr>
+
         </thead>
 
+
         <tbody id="ordersBody">
+
           <tr>
+
             <td
-              colspan="7"
+              colspan="8"
               class="empty-row"
             >
               Laddar beställningar…
             </td>
+
           </tr>
+
         </tbody>
 
       </table>
@@ -211,7 +315,6 @@
 </div>
 
 
-<!-- ORDER DETAIL DRAWER -->
 <div
   class="drawer-overlay"
   id="drawerOverlay"
@@ -231,6 +334,7 @@
       ×
     </button>
 
+
     <div
       class="drawer-scroll"
       id="drawerContent"
@@ -241,13 +345,8 @@
 </div>
 
 
-<!-- SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- CONFIG -->
 <script src="config.js"></script>
-
-<!-- ADMIN JS -->
 <script src="admin.js"></script>
 
 </body>
