@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /betalning/
+Disallow: /tack
+Disallow: /api/
+
+Sitemap: https://launchuf.se/sitemap.xml

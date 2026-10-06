@@ -1,0 +1,16 @@
+# CodeRabbit — installera GitHub-appen på repot, så granskar den varje pull request.
+language: "sv-SE"
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  path_instructions:
+    - path: "src/lib/*.functions.ts"
+      instructions: "Server functions: kontrollera validering, auktorisering, prisberäkning på servern, spamskydd och att inga hemligheter läcker."
+    - path: "src/routes/admin*.tsx"
+      instructions: "Adminvyer: ska aldrig vara indexerbara, all åtkomst ska skyddas av RLS/has_role."
+    - path: "supabase/**"
+      instructions: "SQL: granska RLS-policyer, GRANTs och SECURITY DEFINER-funktioner."
+  path_filters:
+    - "!**/package-lock.json"
+    - "!src/routeTree.gen.ts"
