@@ -376,3 +376,16 @@
 .old .footer-bottom { padding-top: 26px; flex-direction: row; align-items: center; }
 .old .footer-caps { font-size: .72rem; letter-spacing: .22em; text-transform: uppercase; }
 @media (max-width: 800px) { .old .footer-grid { grid-template-columns: 1fr; } .old .footer-bottom { flex-direction: column; gap: 8px; align-items: flex-start; } }
+
+/* ===== Ticker: oändlig loop (två identiska halvor, translateX(-50%)) ===== */
+.old .ticker-track { gap: 0; }
+.old .ticker-half { display: flex; flex-shrink: 0; gap: 16px; padding-right: 16px; }
+.old .ticker-half span:nth-child(odd) { color: var(--gold); }
+
+/* ===== Kundkort med live-förhandsvisning ===== */
+.old .client-card { position: relative; height: 100%; }
+.old .client-preview { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); background: #0f1114; }
+.old .client-preview iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; pointer-events: none; background: #fff; }
+.old .client-visit::after { content: ""; position: absolute; inset: 0; z-index: 2; }
+.old .client-visit:focus-visible { outline: none; }
+.old .client-card:has(.client-visit:focus-visible) { outline: 2px solid var(--gold); outline-offset: 3px; }

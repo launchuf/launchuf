@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SitePreview } from "@/components/site/SitePreview";
 import { useSettings } from "@/components/site/useSettings";
 import { startHomeMotion } from "@/lib/home-motion";
 import { getClientSites } from "@/lib/settings.functions";
@@ -18,6 +19,8 @@ export const Route = createFileRoute("/")({
     }),
   component: HomePage,
 });
+
+const TICKER = ["Skräddarsydd design", "Hemsidor för småföretag", "Mobilanpassat", "Tydliga priser", "Snabb leverans"];
 
 const PROCESS = [
   ["01", "Ni beställer", "Berätta om företaget, ladda upp loggan och ge oss en känsla för hur ni vill att sidan ska se ut."],
@@ -77,7 +80,13 @@ function HomePage() {
 
       <section className="ticker" aria-hidden="true">
         <div className="ticker-track">
-          {[0, 1].flatMap((k) => ["Skräddarsydd design", "Hemsidor för småföretag", "Mobilanpassat", "Tydliga priser", "Snabb leverans"].flatMap((t) => [<span key={`${k}${t}`}>{t}</span>, <span key={`${k}${t}d`}>·</span>]))}
+          {[0, 1].map((half) => (
+            <div className="ticker-half" key={half}>
+              {[0, 1, 2, 3].flatMap((rep) =>
+                TICKER.flatMap((t) => [<span key={`${rep}${t}`}>{t}</span>, <span key={`${rep}${t}d`}>·</span>]),
+              )}
+            </div>
+          ))}
         </div>
       </section>
 
@@ -136,29 +145,6 @@ function HomePage() {
         </p>
       </section>
 
-      {clients.length > 0 && (
-        <section className="clients section-shell" id="kunder" aria-labelledby="clients-title">
-          <div className="section-heading">
-            <p className="section-kicker">Våra kunder</p>
-            <h2 id="clients-title">Sidor vi byggt.</h2>
-          </div>
-          <ul className="clients-grid">
-            {clients.map((c) => (
-              <li key={c.id}>
-                <a className="client-card" href={c.url} target="_blank" rel="noopener noreferrer" style={{ height: "100%" }}>
-                  <div className="client-bar" aria-hidden="true"><i /><i /><i /><span>{hostOf(c.url)}</span></div>
-                  <div className="client-body">
-                    <h3>{c.name}</h3>
-                    {c.description && <p>{c.description}</p>}
-                    <span className="client-visit">Besök sidan ↗<span className="sr-only"> (öppnas i ny flik)</span></span>
-                  </div>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
       <section className="process section-shell" id="process">
         <p className="section-kicker">Process</p>
         <h2 className="process-title">Från formulär till lanserad sida.</h2>
@@ -184,6 +170,32 @@ function HomePage() {
           <p className="showcase-copy">Landningssida. Produktpresentation. Kontakt och beställning. Varje sida byggs efter företaget som ska använda den.</p>
         </div>
       </section>
+
+      {clients.length > 0 && (
+        <section className="clients section-shell" id="kunder" aria-labelledby="clients-title">
+          <div className="section-heading">
+            <p className="section-kicker">Våra kunder</p>
+            <h2 id="clients-title">Sidor vi byggt.</h2>
+          </div>
+          <ul className="clients-grid">
+            {clients.map((c) => (
+              <li key={c.id}>
+                <article className="client-card">
+                  <div className="client-bar" aria-hidden="true"><i /><i /><i /><span>{hostOf(c.url)}</span></div>
+                  {c.show_preview && <SitePreview url={c.url} name={c.name} />}
+                  <div className="client-body">
+                    <h3>{c.name}</h3>
+                    {c.description && <p>{c.description}</p>}
+                    <a className="client-visit" href={c.url} target="_blank" rel="noopener noreferrer">
+                      Besök sidan ↗<span className="sr-only"> ({c.name}, öppnas i ny flik)</span>
+                    </a>
+                  </div>
+                </article>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="quote section-shell">
         <blockquote>”Vi la ner all vår tid på produkten. LAUNCH gav oss en hemsida som gjorde att kunder faktiskt tog oss på allvar.”</blockquote>

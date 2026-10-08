@@ -91,6 +91,9 @@ function ClientsPage() {
               <label className="flex items-center gap-2 text-xs">
                 <input type="checkbox" className="accent-[var(--color-primary)]" checked={c.visible} onChange={(e) => update.mutate({ id: c.id, visible: e.target.checked })} /> Visa
               </label>
+              <label className="flex items-center gap-2 text-xs">
+                <input type="checkbox" className="accent-[var(--color-primary)]" checked={c.show_preview ?? true} onChange={(e) => update.mutate({ id: c.id, show_preview: e.target.checked })} /> Live-förhandsvisning
+              </label>
               <label className="flex items-center gap-2 text-xs">Ordning
                 <Input className="h-9 w-16" inputMode="numeric" defaultValue={c.sort_order} onBlur={(e) => { const n = Number.parseInt(e.target.value, 10); if (Number.isFinite(n) && n !== c.sort_order) update.mutate({ id: c.id, sort_order: n }); }} />
               </label>

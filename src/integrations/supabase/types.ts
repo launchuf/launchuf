@@ -40,7 +40,7 @@ type MessageRow = {
   created_at: string;
 };
 
-type ClientRow = { id: string; name: string; url: string; description: string; sort_order: number; visible: boolean; created_at: string };
+type ClientRow = { id: string; name: string; url: string; description: string; sort_order: number; visible: boolean; show_preview: boolean; created_at: string };
 
 type SettingRow = { key: string; value: string; updated_at: string };
 

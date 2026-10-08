@@ -182,3 +182,6 @@ CREATE POLICY "Public read settings" ON public.site_settings FOR SELECT TO anon,
 GRANT SELECT ON public.client_sites TO anon;
 DROP POLICY IF EXISTS "Public read visible clients" ON public.client_sites;
 CREATE POLICY "Public read visible clients" ON public.client_sites FOR SELECT TO anon USING (visible = true);
+
+-- Live-förhandsvisning per kund (kan stängas av om kundens sida inte tillåter inbäddning)
+ALTER TABLE public.client_sites ADD COLUMN IF NOT EXISTS show_preview boolean NOT NULL DEFAULT true;
