@@ -7,6 +7,5 @@ compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env"]
 directory = "dist/client"
 binding = "ASSETS"
 
-# VIKTIGT: Lägg ALDRIG hemligheter här. Alla nycklar sätts i Cloudflare:
-#   Workers & Pages → launchuf → Settings → Variables and Secrets
-# (se README.md → "Cloudflare-inställningar")
+[vars]
+SUPABASE_URL = "https://dqzcshsjuqhtynayrquw.supabase.co"
